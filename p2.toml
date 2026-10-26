@@ -24,6 +24,12 @@ tokenizer = "codes"
 k1 = 0.9
 b = 0.4
 
+[dense]
+# The embedding model dense uses (p2/embed.py loads it).
+model = "BAAI/bge-small-en-v1.5"
+# Text put in front of every query before it is embedded; "" adds nothing.
+query_prefix = ""
+
 [answer]
 # How many chunks `p2 answer` sends to Claude with each question.
 top = 5
