@@ -260,6 +260,7 @@ Every trace in traces/ that records a Claude call:
 | Trace | System | Spans | Claude calls | Saved | Input tokens | Output tokens | Seconds | Input per span | Output per span | Seconds per span |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
 | traces/shared-practice-rerank.jsonl | rerank | 20 | 20 | 2 | 212,861 | 2,153 | 206.5 | 10,643 | 108 | 10.3 |
+| traces/shared-test-rerank.jsonl | rerank | 40 | 40 | 0 | 430,147 | 4,280 | 280.3 | 10,754 | 107 | 7.0 |
 
 A span is one query of a run, one question of an answers file, or one claim of a judged file. A saved reply costs nothing now, so it counts the tokens and the seconds of the call that made it.
 
@@ -277,9 +278,12 @@ Systems that do not call Claude, from traces/retrieval/ on the machine that last
 
 | Trace | System | Queries | Seconds | Milliseconds per query |
 | --- | --- | ---: | ---: | ---: |
-| traces/retrieval/shared-practice-bm25.jsonl | bm25 | 20 | 0.08 | 4.0 |
-| traces/retrieval/shared-practice-dense.jsonl | dense | 20 | 0.51 | 25.3 |
-| traces/retrieval/shared-practice-hybrid.jsonl | hybrid | 20 | 0.38 | 18.8 |
+| traces/retrieval/shared-practice-bm25.jsonl | bm25 | 20 | 0.07 | 3.4 |
+| traces/retrieval/shared-practice-dense.jsonl | dense | 20 | 0.29 | 14.6 |
+| traces/retrieval/shared-practice-hybrid.jsonl | hybrid | 20 | 0.53 | 26.5 |
+| traces/retrieval/shared-test-bm25.jsonl | bm25 | 40 | 0.21 | 5.3 |
+| traces/retrieval/shared-test-dense.jsonl | dense | 40 | 0.54 | 13.5 |
+| traces/retrieval/shared-test-hybrid.jsonl | hybrid | 40 | 0.88 | 21.9 |
 <!-- p2:end stretch-cost -->
 
 ### The grep agent (option 5)
