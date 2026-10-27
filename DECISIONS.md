@@ -26,7 +26,9 @@ Commit this answer before your first `uv run p2 score` on the own corpus.
 Git history then shows that the expectation came first, which is what lets it be wrong in a way that teaches you something.
 If you were surprised later, say so in prompt 4 or in EVAL.md; do not come back and rewrite this one.
 
-TODO: your answer to prompt 1.
+The corpus I decided to use in stage 2 was the Federal Student Aid handbook from the Federal Student Aid website. My goal with choosing this documentation was to develop and answer questions on a set that I had experience with and ample knowledge about.
+
+Before measuring anything and after doing initial review of the performance of the models on the provided corpus, I believe that hybrid or rerank will win on it. I say this because the questions that I plan to supply my gold set will be a combination of items that judge the models ability to identify based on terminology straight from the handbook, paraphrase based on language from a student asking and an answer that the document would have, and a combination of both. My questions will be structured this way in order to test a variety of options that may be brought to the system and determine how well it performs on more than just simple requests. I hypothesize that bm25 may perform the worst simply because of the importance of paraphrasing that some of my questions will do. Plus, given my initial runs I have found that paraphrasing is the worst metric that bm25 produces. I am excited to see if these assumptions will be true or what will surprise me later on.
 
 ---
 
@@ -41,7 +43,7 @@ If you rejected the alternative without measuring it, say why that was a fair ca
 "There was no alternative" is not an answer.
 Find the fork.
 
-TODO: your answer to prompt 2.
+One fork I ran into was with deciding which embedding model to use, the options were between bge-small and two other models one of which was potion-retrieval that ran faster but was not as precise in paraphrasing and another that was bge-small with a query instruction added to each query. I decided to move forward with the bge-small because although it took a longer time to run I had believed that the result would be more detailed results especially when it came to the paraphrasing measure that it was ran against. By not taking the alternative I resulted in an increase to 0.714 on the paraphrase compared to the bm25 class but it cost me time in about 5 minutes that was used to initially run the model. I plan on still measuring the performance of potion to be sure that this was the right choice but as for right now I am going to continue runs with bge-small.
 
 ---
 

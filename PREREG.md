@@ -24,7 +24,7 @@ One sentence, about your own corpus, naming two of your systems and a direction.
 For example: "On my corpus of Kubernetes documentation, `rerank` has a higher MRR@10 than `hybrid`, because the queries are paraphrases that a first-stage fusion ranks too low."
 It should be something you could be wrong about.
 
-TODO: your hypothesis.
+On my corpus of the Federal Student Aid handbook, dense will beat rerank by having a higher MRR@10 because rerank does not exclusively prioritize paraphrasing the same way dense does.
 
 ---
 
@@ -36,7 +36,11 @@ A difference of 0.02 is usually not worth a reranker's cost in time and tokens.
 In this course, choose a Δ of at least 0.15 unless you argue for a larger one, because a smaller gap takes more queries than one project can judge.
 Call your number Δ (delta).
 
-TODO: your metric and your Δ, with the reason.
+Based on results from stage 1 practice runs I would choose the metric MRR@10. For MRR@10 the gap means that the average 1/rank of the first relevant document per query. So moving a correct answer from rank 2 to rank 1 would add 0.5 to that one query. This means that a delta of 0.20 over a gold set is about 4 of every 10 queries, the right selection moves from second place to first. In the example of a financial aid officer or a student looking up a specific rule this is a difference that could be acknowledged by the user and noticed over time.
+
+In the practice run rerank's queries cost about $0.03 per query and one Claude call each, while dense is free and local. So if dense ends up coming out ahead in the comparisons then that could be cause for rerank to not be necessary when it comes down to costs.
+
+The delta I will be using is 0.20 which could come out to about 29 queries. Given the upcoming deadline I am choosing this delta to account for needing fewer queries, however I will still abide by the 30 minimum number of queries.
 
 ---
 
@@ -65,7 +69,7 @@ After you score the own corpus, the minimum detectable difference that `uv run p
 It should come out at or below your Δ.
 If it does not, your queries varied more than your stage 1 sd suggested, and you will say so in the outcome.
 
-TODO: your sd, which pair it came from, your n, and the number of queries you will write (at least n).
+The standard deviation for the pair rerank minus dense would be 0.382, the delta being used is 0.20 which means n = 29 queries. So the gold set would require at least 30 queries regardless of the formula so this will satisfy the requirement. I will write 30 queries.
 
 ---
 
@@ -82,7 +86,7 @@ This is the default rule, and you can tighten it, but do not loosen it after you
 | around zero, with both ends inside plus or minus Δ | well-powered null: a difference as large as Δ is ruled out |
 | around zero, with an end beyond plus or minus Δ | inconclusive: the gold set could not settle it, and I say so |
 
-TODO: confirm or tighten this rule, and name the two systems and the metric once more.
+I confirm that the rule can remain the way it is right now and accept the default. The two systems being used are dense and rerank and the metric is MRR@10.
 
 ---
 
