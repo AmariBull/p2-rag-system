@@ -2,3 +2,33 @@
 # origin is hand when you wrote the query yourself and claude when a model drafted it; at least 10 must be hand.
 # class is a word you choose, for example identifier, paraphrase or mixed as in the shared sets; scores are reported per class.
 # Lines that start with # are comments, so delete these lines or keep them, as you like.
+c01	identifier	Heightened Cash Monitoring	claude
+c02	identifier	34 CFR 685.304	claude
+c03	identifier	34 CFR 668.34	claude
+c04	identifier	ECAR	claude
+c05	identifier	C Flag	claude
+c06	identifier	Iraq and Afghanistan Service Grant	claude
+c07	identifier	ability to benefit	claude
+c08	paraphrase	I stopped going to my classes halfway through the semester, do I have to pay back some of my aid	claude
+c09	paraphrase	how does my school decide if I am making enough progress toward my degree to keep getting aid	claude
+c10	paraphrase	my parents kicked me out and I cannot get their information for my application	claude
+c11	paraphrase	can the aid office change my numbers because my mom lost her job this year	claude
+c12	paraphrase	what happens if I ended up getting more aid than I was supposed to	claude
+c13	paraphrase	there is money left over after my tuition is paid, how soon does the school have to give it to me	claude
+c14	paraphrase	is there a limit on how many years I can receive the federal grant for low-income students	claude
+c15	mixed	what happens to a TEACH Grant if I do not complete the agreement to serve	claude
+c16	mixed	deadline for offering a post-withdrawal disbursement to a student who withdrew	claude
+c17	mixed	entrance counseling requirements for first-time Direct Loan borrowers	claude
+c18	mixed	what a school must do when it finds conflicting information in a student's file	claude
+c19	mixed	percentage of Federal Work-Study funds a school must spend on community service jobs	claude
+c20	mixed	sanctions a school faces when its cohort default rate is too high	claude
+h01	identifier	National Student Loan Data System (NSLDS)	hand
+h02	identifier	Federal Pell Grant enrollment intensity	hand
+h03	identifier	Foreign Gift Reporting	hand
+h04	paraphrase	Can I still receive federal financial aid if I am taking classes at two different colleges during the same semester?	hand
+h05	paraphrase	What happens if I accidentally provide incorrect information on my FAFSA and need to fix it?	hand
+h06	paraphrase	Can I receive federal student aid for classes that do not count toward my degree?	hand
+h07	paraphrase	Does a student who is incarcerated qualify for federal financial aid to attend college?	hand
+h08	mixed	What documentation must a school collect to verify a student's high school completion status?	hand
+h09	mixed	How are Direct PLUS Loan eligibility requirements affected by an applicant's adverse credit history?	hand
+h10	mixed	What are the requirements for awarding Federal Supplemental Educational Opportunity Grants (FSEOG) to students with exceptional financial need?	hand

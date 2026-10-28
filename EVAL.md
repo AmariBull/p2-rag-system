@@ -25,7 +25,13 @@ The minimum detectable difference is the smallest gap this many queries could re
 
 For each of `dense`, `hybrid` and `rerank`, one or two sentences: the embedding model, how documents were chunked, what was fused and how, how many candidates the reranker saw, and anything you changed from the 12 and 13 lab code.
 
-TODO: describe your three systems.
+Dense uses the BAAI/bge-small-en-v1.5 embedding model with no query prefix. It was able to chunk into 300 word groups allowing chunks sharing 50 words to be overlapped. Every chunk was embedded once and each chunk scored by its cosine similarity.
+
+Hybrid fused the bm25 and dense rankings so there was reciprocal fusion with k = 60. Since each document scores the sum over a specific value over the two lists only ranks count and the bm25 did not have to be put on the same scale as the cosine similarities. Both of the systems provide their full ranking and not just the top 10.
+
+Rerank uses hybrid, the top 20 candidates and first 600 characters in those are whats analyzed. So the Claude need to reply with each of the 20 numbers in a new order, and if it was abnormal the hybrid order was kept with a warning.
+
+What changed from the labs were the dense from lab 12 that was moved to chunks along with the hybrid and rerank from lab 13 that were applied here as well.
 
 ### Practice queries (20)
 
@@ -97,14 +103,20 @@ Which differences are distinguishable from zero and which are not?
 What is the minimum detectable difference at 20 queries, and what does that say about any gap smaller than it?
 Which claim from lecture 12 or 13 did your numbers support, and which did they leave open?
 
-TODO: write what the practice-query intervals let you claim.
+The differences that are distinguishable all involve rerank, they are rerank minus hybrid, rerank minus dense and rerank minus bm25. The ones that are not distinguishable are the remaining comparisons because every interval crosses zero.
+
+The minimal detectable difference at 20 queries is the smallest difference that the 20 queries would catch at 80% of the time. So in this case from 0.166 to 0.415 are what mine had ran to. Given that, most of the comparisons showed between about 0.2 and 0.35 which means that a gap of about 0.1 between two systems whould not show in this set.
+
+These numbers supported the claim from lecture 12 that bm25 wins identifier queries and embeddings win paraphrase queries. For my results Recall@10 is 1.000 for bm25 against 0.214 for dense. For paraphrase it is 0.000 for bm25 against the 0.595 for dense. The claim from lecture 13 that fusion beats both of its parents is not supported by my results here. Hybrid's means are below bm25's on all three metrics and below dense's on two, and none of those gaps are distinguishable.
 
 ---
 
 ## 2. Stage 1 - cited answers on the 12 shared questions
 
 <!-- p2:begin answers -->
-_No answers files yet: run `uv run p2 answer --corpus shared --system NAME`, then `uv run p2 score`._
+| Label | System | Verified (in) | 95% interval | not_found (in) | Declined (out) | 95% interval | Quotes found |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| rerank | rerank | 8 of 8 (100%) | [0.676, 1.000] | 0 of 8 (0%) | 4 of 4 (100%) | [0.510, 1.000] | 13 of 13 |
 <!-- p2:end answers -->
 
 Which system answered, and why that one?
@@ -114,7 +126,13 @@ Then read three in-corpus answers that `uv run p2 verify` passed.
 For each one, open the cited chunk and say whether the quote really supports the claim next to it.
 The check proves a quote is a real piece of the chunk and cannot prove that it supports the claim, so this reading is the part only you can do.
 
-TODO: write your answer choices and your three-answer audit.
+I decided on having rerank answer the questions based on the way it preformed on the practice set. I did not change anything with the prompt so the answers continue to use lab 13's starting prompt as is.
+
+1. a01 — Both claims are supported. Claim 1 is supported by the quote because it explicitly requires operators to notify MSHA immediately and within 15 minutes after learning of a covered accident. However, the claim could be improved by specifying that the requirement applies to the types of accidents listed in the regulation, rather than implying every accident. Claim 2 is fully supported because the section explicitly identifies a death at the mine as a covered accident.
+
+2. a05 — Both claims are supported. Claim 1 is supported because the regulation requires at least 40 hours of training before a new miner can be assigned work duties. Although the quote says "new miner," the section's reference to underground conditions shows it concerns underground mining. Claim 2 is also supported because the regulation states that approximately 8 hours of training must take place at the minesite.
+
+3. a08 — The claim is fully supported. The quote explicitly states that breathable air must sustain each person for 96 hours. The context of Section 7.506 also supports its application to refuge alternatives subject to approval requirements. Therefore, the claim reflects the cited regulation.
 
 ---
 
@@ -259,7 +277,11 @@ Every trace in traces/ that records a Claude call:
 
 | Trace | System | Spans | Claude calls | Saved | Input tokens | Output tokens | Seconds | Input per span | Output per span | Seconds per span |
 | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| traces/answers-rerank.jsonl | rerank | 12 | 24 | 4 | 129,886 | 4,254 | 145.2 | 10,824 | 354 | 12.1 |
 | traces/shared-practice-rerank.jsonl | rerank | 20 | 20 | 2 | 212,861 | 2,153 | 206.5 | 10,643 | 108 | 10.3 |
+| traces/shared-practice-rerank.r1.jsonl | rerank | 20 | 20 | 0 | 151,826 | 1,911 | 80.7 | 7,591 | 96 | 4.0 |
+| traces/shared-practice-rerank.r2.jsonl | rerank | 20 | 20 | 0 | 140,877 | 1,820 | 87.5 | 7,044 | 91 | 4.4 |
+| traces/shared-practice-rerank.r3.jsonl | rerank | 20 | 20 | 0 | 162,702 | 2,040 | 94.1 | 8,135 | 102 | 4.7 |
 | traces/shared-test-rerank.jsonl | rerank | 40 | 40 | 0 | 430,147 | 4,280 | 280.3 | 10,754 | 107 | 7.0 |
 
 A span is one query of a run, one question of an answers file, or one claim of a judged file. A saved reply costs nothing now, so it counts the tokens and the seconds of the call that made it.
@@ -278,6 +300,9 @@ Systems that do not call Claude, from traces/retrieval/ on the machine that last
 
 | Trace | System | Queries | Seconds | Milliseconds per query |
 | --- | --- | ---: | ---: | ---: |
+| traces/retrieval/own-own-bm25.jsonl | bm25 | 30 | 0.11 | 3.6 |
+| traces/retrieval/own-own-dense.jsonl | dense | 30 | 0.23 | 7.6 |
+| traces/retrieval/own-own-hybrid.jsonl | hybrid | 30 | 0.45 | 14.9 |
 | traces/retrieval/shared-practice-bm25.jsonl | bm25 | 20 | 0.07 | 3.4 |
 | traces/retrieval/shared-practice-dense.jsonl | dense | 20 | 0.29 | 14.6 |
 | traces/retrieval/shared-practice-hybrid.jsonl | hybrid | 20 | 0.53 | 26.5 |
@@ -310,7 +335,26 @@ Write the five things here.
 Three runs of the reranker on the practice queries, and three answers files, with their run-to-run spread and Wilson intervals.
 
 <!-- p2:begin repeats -->
-_No repeated runs or answers files yet (598E: `p2 run ... --repeat 3` and `p2 answer ... --repeat 3`)._
+Repeated runs of rerank on shared/practice:
+
+| Run | Recall@10 | MRR@10 | nDCG@10 |
+| --- | ---: | ---: | ---: |
+| rerank.r1 | 0.758 | 0.800 | 0.754 |
+| rerank.r2 | 0.758 | 0.800 | 0.761 |
+| rerank.r3 | 0.758 | 0.800 | 0.765 |
+| range (max minus min) | 0.000 | 0.000 | 0.011 |
+
+| Comparison | Metric | Mean difference | 95% interval | Reading |
+| --- | --- | ---: | ---: | --- |
+| rerank.r1 minus hybrid | Recall@10 | +0.167 | [+0.058, +0.292] | rerank.r1 higher |
+| rerank.r2 minus hybrid | Recall@10 | +0.167 | [+0.058, +0.292] | rerank.r2 higher |
+| rerank.r3 minus hybrid | Recall@10 | +0.167 | [+0.058, +0.292] | rerank.r3 higher |
+| rerank.r1 minus hybrid | MRR@10 | +0.329 | [+0.164, +0.504] | rerank.r1 higher |
+| rerank.r2 minus hybrid | MRR@10 | +0.329 | [+0.164, +0.504] | rerank.r2 higher |
+| rerank.r3 minus hybrid | MRR@10 | +0.329 | [+0.164, +0.504] | rerank.r3 higher |
+| rerank.r1 minus hybrid | nDCG@10 | +0.310 | [+0.186, +0.439] | rerank.r1 higher |
+| rerank.r2 minus hybrid | nDCG@10 | +0.318 | [+0.194, +0.446] | rerank.r2 higher |
+| rerank.r3 minus hybrid | nDCG@10 | +0.322 | [+0.196, +0.450] | rerank.r3 higher |
 <!-- p2:end repeats -->
 
 Does the reranker's gain over its first stage survive the run-to-run variation?
