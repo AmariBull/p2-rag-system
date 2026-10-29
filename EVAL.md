@@ -155,6 +155,8 @@ Your labels are binary (`rel` 1) unless you say otherwise: if you use graded lab
 
 TODO: describe your gold set and your relevance rule.
 
+A document is relevant if a reader could use it to answer the query: it states the rule, definition, procedure, or figure the query asks about, even if it's one paragraph in a longer chapter. A document that only mentions the query's term in passing (a list of related topics, a cross-reference, "see Volume 4") is not relevant, and neither is one that covers the general topic but not the specific thing asked. The pool I judged was the top 5 of bm25, dense and hybrid plus the top 3 keyword hits per query, and any document outside that pool counts as not relevant.
+
 ---
 
 ## 4. Stage 2 - results on your corpus
@@ -162,26 +164,78 @@ TODO: describe your gold set and your relevance rule.
 Scores per system on your gold set.
 
 <!-- p2:begin own -->
-_No scored runs here yet: run `uv run p2 run --corpus own --system bm25` (or `--all`), then `uv run p2 score`._
+| System | Recall@10 | MRR@10 | nDCG@10 |
+| --- | ---: | ---: | ---: |
+| bm25 | 0.776 | 0.829 | 0.743 |
+| dense | 0.671 | 0.883 | 0.672 |
+| hybrid | 0.806 | 0.892 | 0.786 |
+
+30 judged queries; nDCG uses binary labels; a random ranking of the 312 documents would get recall@10 near 0.032.
 <!-- p2:end own -->
 
 The same scores per query class.
 
 <!-- p2:begin own-classes -->
-_No scored runs here yet: run `uv run p2 run --corpus own --system bm25` (or `--all`), then `uv run p2 score`._
+| System | Metric | identifier (n=10) | paraphrase (n=11) | mixed (n=9) |
+| --- | --- | ---: | ---: | ---: |
+| bm25 | Recall@10 | 0.935 | 0.517 | 0.915 |
+| bm25 | MRR@10 | 1.000 | 0.579 | 0.944 |
+| bm25 | nDCG@10 | 0.924 | 0.461 | 0.886 |
+| dense | Recall@10 | 0.572 | 0.592 | 0.878 |
+| dense | MRR@10 | 0.800 | 0.909 | 0.944 |
+| dense | nDCG@10 | 0.596 | 0.601 | 0.842 |
+| hybrid | Recall@10 | 0.773 | 0.694 | 0.978 |
+| hybrid | MRR@10 | 0.775 | 0.909 | 1.000 |
+| hybrid | nDCG@10 | 0.738 | 0.694 | 0.952 |
 <!-- p2:end own-classes -->
 
 The same scores for the queries you wrote yourself (`hand`) and the ones a model drafted (`claude`), with the difference between the two groups and its interval.
 Once both groups have queries, the table also says whether `bm25`'s lead over `dense` differs between them, and what share of each query's content words its best relevant document contains, which is stretch option 6.
 
 <!-- p2:begin own-origins -->
-_No scored runs here yet: run `uv run p2 run --corpus own --system bm25` (or `--all`), then `uv run p2 score`._
+| System | Metric | hand (n=10) | claude (n=20) | hand minus claude | 95% interval | Reading |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| bm25 | Recall@10 | 0.838 | 0.745 | +0.094 | [-0.070, +0.265] | not distinguishable |
+| bm25 | MRR@10 | 0.950 | 0.768 | +0.182 | [+0.008, +0.355] | hand higher |
+| bm25 | nDCG@10 | 0.848 | 0.690 | +0.157 | [-0.014, +0.331] | not distinguishable |
+| dense | Recall@10 | 0.788 | 0.613 | +0.176 | [+0.017, +0.343] | hand higher |
+| dense | MRR@10 | 1.000 | 0.825 | +0.175 | [+0.050, +0.325] | hand higher |
+| dense | nDCG@10 | 0.788 | 0.614 | +0.174 | [+0.036, +0.320] | hand higher |
+| hybrid | Recall@10 | 0.865 | 0.776 | +0.089 | [-0.077, +0.252] | not distinguishable |
+| hybrid | MRR@10 | 1.000 | 0.838 | +0.163 | [+0.050, +0.300] | hand higher |
+| hybrid | nDCG@10 | 0.888 | 0.735 | +0.153 | [+0.006, +0.302] | hand higher |
+
+The hand and claude queries are different queries, so the interval of hand minus claude comes from resampling the queries within each group (10,000 times), not from pairing them.
+
+Do model-written queries favor keyword search? bm25's lead over dense (bm25 minus dense, per query) on the claude queries and on the hand queries, and claude minus hand:
+
+| Metric | Lead on claude | Lead on hand | Claude minus hand | 95% interval | Reading |
+| --- | ---: | ---: | ---: | ---: | --- |
+| Recall@10 | +0.132 | +0.050 | +0.082 | [-0.106, +0.273] | not distinguishable |
+| MRR@10 | -0.057 | -0.050 | -0.007 | [-0.237, +0.231] | not distinguishable |
+| nDCG@10 | +0.076 | +0.060 | +0.016 | [-0.169, +0.211] | not distinguishable |
+
+Mean content-word overlap, the share of a query's content words found in its best relevant document: hand 0.92 (10 queries), claude 0.84 (20 queries).
+
+Stretch option 6 asks for at least 20 judged queries of each origin; here there are 10 hand and 20 claude.
 <!-- p2:end own-origins -->
 
 Differences between every pair of systems.
 
 <!-- p2:begin own-pairs -->
-_No scored runs here yet: run `uv run p2 run --corpus own --system bm25` (or `--all`), then `uv run p2 score`._
+| Comparison | Metric | Mean difference | 95% interval | MDD | Reading |
+| --- | --- | ---: | ---: | ---: | --- |
+| dense minus bm25 | Recall@10 | -0.105 | [-0.224, +0.005] | 0.169 | not distinguishable |
+| dense minus bm25 | MRR@10 | +0.054 | [-0.096, +0.200] | 0.218 | not distinguishable |
+| dense minus bm25 | nDCG@10 | -0.071 | [-0.189, +0.041] | 0.169 | not distinguishable |
+| hybrid minus bm25 | Recall@10 | +0.030 | [-0.081, +0.135] | 0.158 | not distinguishable |
+| hybrid minus bm25 | MRR@10 | +0.063 | [-0.071, +0.190] | 0.191 | not distinguishable |
+| hybrid minus bm25 | nDCG@10 | +0.043 | [-0.071, +0.150] | 0.164 | not distinguishable |
+| hybrid minus dense | Recall@10 | +0.134 | [+0.055, +0.212] | 0.113 | hybrid higher |
+| hybrid minus dense | MRR@10 | +0.008 | [-0.058, +0.075] | 0.098 | not distinguishable |
+| hybrid minus dense | nDCG@10 | +0.114 | [+0.066, +0.162] | 0.070 | hybrid higher |
+
+The interval is a paired bootstrap (10,000 resamples of the queries); MDD is the smallest difference this many queries detect 80% of the time.
 <!-- p2:end own-pairs -->
 
 Which differences are distinguishable and which are not, at your gold-set size?
