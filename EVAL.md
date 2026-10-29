@@ -144,7 +144,11 @@ What is it, where did it come from, how many documents and how many megabytes, a
 Name the one or two documents you were least sure about and what you decided.
 Say which of the allowed sources in the brief it comes from.
 
-TODO: describe your corpus and its license basis.
+My corpus consists of the 2025–2026 Federal Student Aid Handbook, published by the U.S. Department of Education's Office of Federal Student Aid. It was obtained from the official Federal Student Aid Knowledge Center. The handbook contains an Application and Verification Guide, nine volumes, and appendices covering financial aid eligibility, FAFSA verification, federal grants, student loans, and institutional responsibilities.
+
+The corpus contains [insert document count] documents, with a total size of [insert size] MB after ingestion. It falls under the assignment's allowed category of U.S. federal government publications (public-domain material). The licensing basis is 17 U.S.C. § 105 and the Department of Education's public-domain publication policy, subject to any separately copyrighted third-party content.
+
+The two documents I would examine most carefully for licensing concerns are Volume 5, Chapter 3: Return of Title IV Funds Case Studies and Appendix F: Higher Education Act of 1965 – Table of Contents. Both contain specialized material, but because they consist of federal guidance and statutory references, I would retain them after confirming that the ingested content contains no separately copyrighted third-party material.
 
 ### The gold set
 
@@ -153,9 +157,11 @@ How did you decide that a document is relevant: write your relevance rule in two
 How did you find candidates (the systems' top 10, a keyword search, reading), and did you read every document before you labeled it?
 Your labels are binary (`rel` 1) unless you say otherwise: if you use graded labels, declare the scale here, for example 2 means the document answers the query fully and 1 means it helps.
 
-TODO: describe your gold set and your relevance rule.
+My gold set contains 30 queries, consisting of 10 queries with origin hand and 20 queries with origin claude. I used three query classes: identifier, paraphrase, and mixed. Identifier queries test whether retrieval systems can locate specific terms, regulations, or abbreviations. Paraphrase queries test whether systems can find relevant information when questions use everyday language instead of the handbook's exact wording. Mixed queries combine technical terminology with natural-language questions to evaluate both keyword matching and semantic understanding.
 
-A document is relevant if a reader could use it to answer the query: it states the rule, definition, procedure, or figure the query asks about, even if it's one paragraph in a longer chapter. A document that only mentions the query's term in passing (a list of related topics, a cross-reference, "see Volume 4") is not relevant, and neither is one that covers the general topic but not the specific thing asked. The pool I judged was the top 5 of bm25, dense and hybrid plus the top 3 keyword hits per query, and any document outside that pool counts as not relevant.
+A document is relevant if a reader could use it to answer the query: it states the rule, definition, procedure, or figure the query asks about, even if it's one paragraph in a longer chapter. A document that only mentions the query's term in passing (a list of related topics, a cross-reference, "see Volume 4") is not relevant, and neither is one that covers the general topic but not the specific thing asked. The pool I judged was the top 5 of bm25, dense, hybrid, and rerank plus the top 3 keyword hits per query, and any document outside that pool counts as not relevant.
+
+I identified candidate documents using keyword searches, examining the top 10 results from the retrieval systems, and reading relevant sections of the Federal Student Aid Handbook. I reviewed the content of each candidate document before assigning its relevance label rather than relying solely on matching keywords or document titles. This helped ensure that relevance judgments were based on the actual information contained in the documents.
 
 ---
 
@@ -258,7 +264,13 @@ Which differences are distinguishable and which are not, at your gold-set size?
 Do the `hand` queries and the `claude` queries tell the same story?
 Did your prediction in `DECISIONS.md` prompt 1 hold?
 
-TODO: write what your own-corpus intervals let you claim.
+Based on the results from my 30-query gold set, hybrid performed best overall, achieving the highest Recall@10 (0.793), MRR@10 (0.892), and nDCG@10 (0.773). Dense performed worst in Recall@10 (0.617) and nDCG@10 (0.638), while BM25 had the lowest MRR@10 (0.829). However, not all differences were statistically distinguishable. The 95% confidence intervals showed that hybrid performed better than dense in Recall@10 and nDCG@10, and better than rerank in Recall@10. BM25 also performed better than dense in Recall@10. The remaining comparisons were not distinguishable at this gold-set size because their confidence intervals included zero.
+
+The results differed depending on query class. BM25 performed especially well on identifier queries, achieving 0.930 Recall@10, but struggled with paraphrase queries, where its Recall@10 dropped to 0.466. Hybrid performed particularly well on mixed queries, achieving 0.962 Recall@10 and 1.000 MRR@10. This suggests that combining keyword and semantic retrieval was useful for questions containing both technical terminology and natural language.
+
+The hand and claude queries told a generally similar story, although the hand-written queries produced higher scores for most systems. For example, hybrid achieved 0.850 Recall@10 on hand queries compared with 0.764 on Claude queries, but the confidence interval showed that this difference was not distinguishable. The hand-written queries also had higher content-word overlap (0.92 versus 0.84). There was no distinguishable difference in BM25's advantage over dense between the two origins, so the results do not provide strong evidence that model-written queries favored keyword retrieval. Since there were only 10 hand-written queries, these conclusions are limited by the sample size.
+
+My original prediction was partially correct. In DECISIONS.md, I predicted that hybrid or rerank would perform best because my gold set included identifier, paraphrase, and mixed queries. Hybrid did achieve the highest overall scores, supporting that part of my prediction. However, I also expected BM25 to perform worst because of its difficulty handling paraphrased questions. Instead, dense had the lowest overall Recall@10 and nDCG@10, while BM25 performed very well on identifier queries. I was also surprised that reranking did not improve performance over hybrid. These results showed me that keyword retrieval remains valuable for technical documents like the Federal Student Aid Handbook, especially when questions contain exact regulatory terms and abbreviations.
 
 ---
 
@@ -283,7 +295,7 @@ What did you change, what happened, and does the interval support the claim you 
 If the result is not distinguishable, say what size of effect your gold set could have seen.
 Read the queries at the top of each list in the second table, and say whether your change explains them.
 
-TODO: write the ablation: the one change, the hypothesis, the result and the claim.
+Hypothesis: I expect reducing the chunk size to 150 to raise RECALL@10 and its performance on identifier queries because smaller chunks can give the words more weight within the vector.
 
 ---
 
