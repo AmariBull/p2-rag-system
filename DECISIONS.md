@@ -59,7 +59,11 @@ What did you do instead?
 If it genuinely never happened, say so plainly, and then say what you would have had to check in order to notice.
 Being honest here costs you far less than a story you cannot defend when you record your video.
 
-TODO: your answer to prompt 3.
+One time I overruled Claude was when I was expanding my judging pool for rerank. Claude recommended that I only judge rerank's top 2 results, which would have added 12 documents. However, I decided to judge all 44 documents from rerank's top 5 instead because I wanted to make sure the evaluation was fair and that I was not leaving out potentially relevant documents.
+
+I noticed that only judging 12 documents could leave some of rerank's results unjudged, which might affect how its performance was measured compared with the other systems. After adding all 44 documents and reviewing their relevance, the MRR@10 difference between rerank and dense changed from -0.060 to -0.021.
+
+Overall, I decided not to follow Claude's recommendation because I wanted the judging pool to be more complete rather than taking the shorter approach. This showed me that even when an agent suggests something that would save time, I still need to consider whether that suggestion could affect the reliability of my results.
 
 ---
 
@@ -71,7 +75,11 @@ It could be a mean over a small query class, a difference whose interval include
 What would have to be true for you to trust it?
 Did you do anything to test it, and what did that show?
 
-TODO: your answer to prompt 4.
+One number in my evaluation that I do not fully trust is the MRR@10 score for my own corpus, where the systems scored between 0.829 and 0.892. Even though these results showed fairly good performance, I noticed that my relevance judgments only covered the top 5 results from each system. This meant that between 66 and 97 of each system's 300 top-10 results were still unjudged and counted as not relevant, even though some of them could have contained useful information.
+
+I think this could have affected the scores because the systems may have retrieved relevant documents that were never judged. I was able to test this partly when I expanded the judging pool to include rerank's top 5 results. After reviewing those additional documents, rerank's MRR@10 increased from 0.823 to 0.862. This showed me that the relevance judgments could change the evaluation results without changing the retrieval system itself.
+
+Overall, I would trust these scores more if I reviewed all of the top 10 results from each system and made sure every document was judged using the same relevance rule. Although I expanded the judging pool and saw the scores change, I did not complete a full top-10 judgment pass. Because of this, I think the current results are useful for comparing the systems, but I cannot assume they represent their full retrieval performance.
 
 ---
 
@@ -82,4 +90,8 @@ One thing in your system, your corpus or your gold set that is not right, not fi
 What would you do next, and how would you find out whether it matters?
 Name the file, the query or the document where someone could look.
 
-TODO: your answer to prompt 5.
+One thing I noticed that still needs improvement is how hybrid handles identifier queries. For example, on query c03, which asked about 34 CFR 668.34, BM25 ranked all three relevant documents in its top 3 results, while hybrid did not return any of them in its top 10. This was surprising because hybrid combines BM25 and dense, so I expected it to benefit from BM25 finding the correct documents.
+
+I think the problem may be related to how the rankings are combined. Since dense did not retrieve the relevant documents, combining the two rankings may have pushed BM25's correct results further down. To improve this, I would try giving BM25 more weight during rank fusion in p2/retrievers/hybrid.py and compare the results against the original rankings in runs/own/hybrid.trec.
+
+Overall, I would test this change on the identifier queries in my gold set and compare Recall@10 and MRR@10 before and after. I would know the change helped if hybrid started returning the relevant documents for c03 in its top 10 and improved its overall identifier performance without hurting the other query classes. This would help me determine whether changing the fusion weights actually fixes the problem or if something else is affecting the rankings.

@@ -159,7 +159,7 @@ Your labels are binary (`rel` 1) unless you say otherwise: if you use graded lab
 
 My gold set contains 30 queries, consisting of 10 queries with origin hand and 20 queries with origin claude. I used three query classes: identifier, paraphrase, and mixed. Identifier queries test whether retrieval systems can locate specific terms, regulations, or abbreviations. Paraphrase queries test whether systems can find relevant information when questions use everyday language instead of the handbook's exact wording. Mixed queries combine technical terminology with natural-language questions to evaluate both keyword matching and semantic understanding.
 
-A document is relevant if a reader could use it to answer the query: it states the rule, definition, procedure, or figure the query asks about, even if it's one paragraph in a longer chapter. A document that only mentions the query's term in passing (a list of related topics, a cross-reference, "see Volume 4") is not relevant, and neither is one that covers the general topic but not the specific thing asked. The pool I judged was the top 5 of bm25, dense, hybrid, and rerank plus the top 3 keyword hits per query, and any document outside that pool counts as not relevant.
+A document is relevant if a reader could use it to answer the query: it states the rule, definition, procedure, or figure the query asks about, even if it's one paragraph in a longer chapter. A document that only mentions the query's term in passing (a list of related topics, a cross-reference, "see Volume 4") is not relevant, and neither is one that covers the general topic but not the specific thing asked. The pool I judged was the top 5 of bm25, dense, hybrid, dense_c150, and rerank plus the top 3 keyword hits per query, and any document outside that pool counts as not relevant.
 
 I identified candidate documents using keyword searches, examining the top 10 results from the retrieval systems, and reading relevant sections of the Federal Student Aid Handbook. I reviewed the content of each candidate document before assigning its relevance label rather than relying solely on matching keywords or document titles. This helped ensure that relevance judgments were based on the actual information contained in the documents.
 
@@ -359,10 +359,21 @@ Pick the queries where your best system on your own corpus failed: the relevant 
 Take at least five, and read what the system returned next to what was relevant.
 Then sort the failures by cause, for example a vocabulary mismatch, near-duplicate documents, a chunk that cut the answer in half, a query that is ambiguous, or a label that was wrong, because sometimes the gold set is what failed.
 
+For my failure analysis, I decided to use hybrid because it performed the best overall on my corpus. I looked at the five queries where hybrid performed the worst and compared the documents it returned with the ones I had marked as relevant. My goal was to understand why the system struggled with these questions and what changes I could make to improve its performance.
+
 | qid | what the best system returned | what was relevant | cause | what you would try |
 |---|---|---|---|---|
+| c03 – 34 CFR 668.34 | Hybrid returned documents about consumer information, school audits, and other regulations that did not answer the query. | BM25 found all three relevant documents in its top 3, but hybrid did not return any of them in its top 10. | Rank fusion issue. Since dense did not find any of the relevant documents, combining its results with BM25 pushed the correct documents down. | I would try giving BM25 more weight when combining results. I would know it worked if the relevant documents appeared in hybrid's top 10. |
+| c07 – ability to benefit | Hybrid returned documents about FAFSA benefits, Federal Work-Study, and school eligibility. | BM25 ranked the three relevant documents 1st, 3rd, and 5th, while hybrid only returned two of them at 4th and 7th. | Vocabulary mismatch and rank fusion. Dense struggled to find the documents related to the exact term, which affected hybrid's rankings. | I would try giving more weight to exact terms in the query. I would look for the relevant documents to appear higher in the results. |
+| c02 – 34 CFR 685.304 | Hybrid returned documents about Direct Loans, consumer information, and loan counseling. | There were four relevant documents, but hybrid only returned two in its top 10, at ranks 2 and 3. | Similar regulatory references. Several documents contained CFR references, but not all of them were useful for answering this specific query. | I would try giving more weight to exact regulation numbers. I would know it helped if hybrid returned more of the relevant documents in its top 10. |
+| c11 – mom lost her job | Hybrid returned documents about Perkins Loans, financial management, and FAFSA corrections. | Four documents were marked relevant, but hybrid only found two in its top 10, at ranks 2 and 10. | Vocabulary mismatch. The question was written the way a student would ask it, while the handbook uses terms like professional judgment and special circumstances. | I would try expanding the query with terms like professional judgment and income adjustment. I would check whether this helped the system find the special-cases chapter. |
+| c13 – leftover money after tuition | Hybrid returned documents about Work-Study payments, post-withdrawal disbursements, and other financial aid payments. | Three documents were marked relevant, but hybrid only found two in its top 10, at ranks 2 and 8. | Ambiguous query. The system seemed to have trouble distinguishing between a regular financial aid credit balance and other types of payments. | I would try adding terms like Title IV credit balance and payment deadline to the query. I would know it worked if the system ranked the correct credit-balance information higher. |
 
-TODO: add one row for each failure you analyzed, and write two or three sentences on the pattern you see across them.
+**Overall Pattern**
+
+After looking at these five queries, I noticed that hybrid struggled in two different ways. For identifier queries, BM25 was sometimes able to find the correct documents, but combining its results with dense caused those documents to rank lower or disappear from the top 10. For paraphrase queries, the system seemed to struggle more with connecting the way a student asks a question to the terminology used in the handbook.
+
+Based on these results, I think giving BM25 more weight for identifier queries and expanding paraphrase queries with related terminology could help improve hybrid's performance. I would want to test these changes and compare the results before deciding whether they actually improve the system.
 
 ---
 
@@ -375,7 +386,28 @@ Did the winner change between the shared corpus and yours?
 Why, or why not: what is different about the two collections (document length, vocabulary, identifiers, near-duplicates, how the queries were written), and which of your explanations did you test and which are guesses?
 Say what 20 queries on one side and your gold-set size on the other cannot support.
 
-TODO: write the cross-corpus comparison.
+After comparing the results from the shared corpus and my own corpus, I found that the system with the highest scores changed. On the shared corpus, rerank performed the best, while on my Federal Student Aid Handbook corpus, hybrid had the highest overall scores. I copied the scores from sections 1 and 4 into the table below to make the differences easier to compare.
+
+| System | Shared MRR@10 | Own MRR@10 |
+| --- | ---: | ---: |
+| bm25 | 0.507 | 0.829 |
+| dense | 0.562 | 0.883 |
+| hybrid | 0.471 | 0.892 |
+| rerank | 0.800 | 0.862 |
+
+One thing I found interesting was that rerank performed noticeably better than the other systems on the shared corpus. The confidence intervals supported this as well, since rerank's differences from all three other systems were distinguishable. For example, rerank performed better than hybrid by 0.329 MRR@10, with a 95% interval of [+0.164, +0.504]. However, on my corpus, even though hybrid had the highest averages, none of the differences between the systems were distinguishable. For example, hybrid was ahead of BM25 by 0.063 MRR@10, but its interval of [-0.071, +0.190] included zero. This means I cannot say hybrid was definitively better than the other systems based on my results.
+
+I believe one reason for the difference is the way the two corpora were structured. The shared corpus contained 2,484 documents with a median length of 68 words, while my corpus contained 312 documents with a median length of 1,603 words. This is a fairly large difference in document length. Most of the shared documents could fit into a single chunk, while the documents in my corpus needed to be divided into multiple chunks. Since dense uses the best matching chunk to score a document, I think this could have affected which documents were retrieved and how they were ranked. However, I did not directly test whether this difference in document length caused the change in performance.
+
+Another difference I noticed was how the systems handled identifiers and paraphrased questions. On both corpora, BM25 performed well when queries contained specific terminology. However, on the shared corpus, BM25 had an MRR@10 of 0.000 for paraphrase queries, compared with 0.579 on my corpus. I think this may be related to how the questions were written. The shared practice questions were provided by the instructor, while my own gold set included questions I wrote and questions drafted by Claude. Some of the shared paraphrase questions were also written to avoid the exact wording found in the regulations, which may have made them more difficult for BM25.
+
+I was able to examine some of this through my hand and Claude query comparisons. My hand-written queries had a content-word overlap of 0.92 with their best relevant documents, compared with 0.84 for the Claude queries. This suggests that the wording of the questions may have influenced the retrieval results. However, I cannot say that this explains the differences between the two corpora because I did not test the same questions or query-writing methods on both collections.
+
+I also tested whether changing the chunk size would improve dense retrieval on my corpus. My hypothesis was that reducing the chunk size from 300 to 150 words would help the system identify specific terms more easily. Instead, MRR@10 decreased by 0.102, with a 95% interval of [-0.226, +0.006]. Since the interval included zero, the difference was not distinguishable. This did not provide evidence that smaller chunks improved performance, but it also does not prove that chunk size has no effect. I also considered whether similar or repeated documents affected the results, but I did not directly measure near-duplicates in either corpus, so that explanation is still a guess.
+
+Finally, I think the number of queries used is important when looking at these results. The shared corpus had 20 judged queries, while my corpus had 30. For MRR@10, the minimum detectable differences on the shared corpus ranged from 0.192 to 0.412, while on my corpus they ranged from 0.098 to 0.232. This means that smaller differences could have gone undetected, especially with only 20 queries. Just because two systems were not distinguishable does not mean they performed exactly the same.
+
+Overall, I found that rerank was the clear winner on the shared corpus based on the confidence intervals, while hybrid only had the highest observed scores on my corpus. I believe the differences in document length, terminology, and how the queries were written could have contributed to this result, but I only tested some of these explanations. Since the corpora also used different questions, query classes, and relevance judgments, I cannot determine exactly how much of the difference came from the documents themselves. What this comparison showed me is that a system performing the best on one corpus does not guarantee it will perform the same way on another, and that the confidence intervals are important when deciding what the results actually support.
 
 ---
 
@@ -465,7 +497,15 @@ _No stretch runs yet (stretch option 5): `uv run p2 run --corpus own --queries e
 
 ### Your stretch
 
-Write the five things here.
+For my stretch, I completed the rider option, which involved repeating rerank on the shared corpus and testing a pre-registered claim on my own corpus.
+
+What I did: I ran rerank three additional times, with the results saved in runs/shared/rerank.practice.r1.trec through rerank.practice.r3.trec and their traces in traces/. I also repeated the answers three times, saved in answers/shared/rerank.r1.json through rerank.r3.json. My pre-registration was saved in PREREG.md and committed as c0f5832 before my first judgments in 8ab5fa8. My final gold set contained 30 queries in eval/own/queries.tsv and 147 judgments in eval/own/qrels.txt.
+
+Results: The repeats table in section 9 contains my repeated rerank and answer results, while the own-pairs table in section 4 contains the results for my pre-registered claim.
+
+What the intervals showed: The repeated runs supported rerank's improvement over hybrid, with an MRR@10 difference of +0.329 and a 95% interval of [+0.164, +0.504]. However, my pre-registered prediction that dense would outperform rerank was not supported. Dense only had an MRR@10 advantage of +0.021, with an interval of [-0.111, +0.149]. This means smaller differences are still possible, but the results do not support the improvement I originally expected.
+
+What I would try next: I would test the systems on more queries to see whether the results remain consistent with a larger gold set. I would especially want to add more shared questions to narrow the Wilson confidence intervals for verified and declined answers. I would know this helped if the intervals became narrower while the results remained consistent with what I observed in section 9.
 
 ---
 
@@ -515,7 +555,11 @@ Each repeat answers the same questions, so the repeats are not independent trial
 Does the reranker's gain over its first stage survive the run-to-run variation?
 Write what the spread is, how it compares with the gain, and what the Wilson intervals on the verified share and the declined share say about 8 and 4 questions.
 
-598E: write the repeats result here.
+After running rerank three additional times on the shared corpus, I found that its performance remained consistent across each run. Recall@10 stayed at 0.758 and MRR@10 stayed at 0.800, giving both a range of 0.000. nDCG@10 showed a small amount of variation, ranging from 0.754 to 0.765. When comparing rerank to hybrid, the MRR@10 improvement remained +0.329 with a 95% confidence interval of [+0.164, +0.504]. Since the improvement was much larger than the variation between runs, I believe this supports that rerank's improvement over hybrid was consistent.
+
+I also looked at the repeated answers and found that each run verified 8 out of 8 in-corpus answers and correctly declined 4 out of 4 out-of-corpus questions. However, the Wilson confidence intervals were [0.676, 1.000] for verified answers and [0.510, 1.000] for declined answers. This means that even though the system received perfect scores, the small number of questions does not guarantee the same performance on a larger set. I also noticed that the original answers file contained 13 claims while each repeat contained 12, showing that the answers were not completely identical.
+
+Overall, I found that rerank's improvement over hybrid survived the variation between runs. The performance differences were much larger than the small changes between repeats, and the confidence intervals supported the improvement. However, since the repeats used the same questions, I cannot treat them as independent tests or combine their results to make the intervals smaller.
 
 ### The pre-registered claim
 
@@ -523,4 +567,8 @@ The claim, the smallest effect, the gold-set size and the test are in `PREREG.md
 Here, say whether you followed the plan, what the interval turned out to be, and what that means.
 The outcome section of `PREREG.md` holds the short version.
 
-598E: write the claim and its outcome here.
+For my pre-registered claim, I predicted that dense would perform better than rerank on MRR@10 by at least 0.20. I estimated that I would need around 29 queries, and my final gold set contained 30 queries with 147 relevance judgments. I followed my original testing plan, although I replaced c01 before making any judgments and expanded the judging pool twice by adding 44 documents from rerank and 40 from dense_c150. My hypothesis, effect size, and decision rule remained the same.
+
+After evaluating the systems, dense performed slightly better than rerank, with an MRR@10 difference of +0.021 and a 95% confidence interval of [-0.111, +0.149]. Since the interval included zero, the difference was not distinguishable. The interval also stayed within my original threshold of ±0.20, meaning the results did not support an improvement as large as I predicted. The minimum detectable difference was 0.189, which was slightly smaller than my planned effect size of 0.20.
+
+Overall, my original prediction was not supported. Even though dense had a slightly higher MRR@10, the difference was too small to conclude that it performed better than rerank. Based on my pre-registered decision rule, the interval rules out a difference as large as 0.20, but smaller differences between the systems are still possible.

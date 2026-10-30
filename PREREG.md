@@ -97,7 +97,11 @@ Which row of the table in section 4 is it?
 Did your gold set reach the size section 3 asked for, and what was the minimum detectable difference that `uv run p2 score` printed?
 What would you do next, and what would you want a reader to take from this?
 
-TODO: your outcome.
+After evaluating my pre-registered claim, I found that dense performed slightly better than rerank on MRR@10, with a difference of +0.021 and a 95% confidence interval of [-0.111, +0.149]. I reported the difference as dense minus rerank to match the direction of my original hypothesis. Since the interval included zero, the difference was not distinguishable.
+
+Based on my decision rule in section 4, this falls under the well-powered null row, since the entire interval stayed within my original threshold of ±0.20. This means the results did not support my prediction that dense would outperform rerank, although smaller differences are still possible. My gold set contained 30 queries, which met my planned requirement of 29. The minimum detectable difference was 0.189, which was also below my chosen effect size of 0.20.
+
+Overall, my original prediction was not supported, but the results showed that dense performed similarly to rerank without requiring additional Claude calls. On my corpus, rerank used about 7,527 more input tokens and 2.9 additional seconds per query without a distinguishable improvement in MRR@10. Based on this, I would want to test both systems on more queries to see whether the difference remains small. For now, I think dense may be the more practical option when considering the additional cost of reranking.
 
 ---
 
@@ -105,3 +109,8 @@ TODO: your outcome.
 
 Dated entries only, one per change, each saying what changed and why.
 Leave this section as it is if nothing changed.
+
+Three things changed after committing the pre-registration:
+1. The c01 query was replaced, on 2026-10-28, before any judgment. "SULA" doesn't appear anywhere in the 2025-26 handbook, so it became "Heightened Cash Monitoring." The count stayed at 30.
+2. The pool was extended with rerank's top 5, on 2026-10-28. The first pool came only from bm25, dense and hybrid, so 44 of rerank's top-5 documents had never been judged. That biased the test against rerank. I judged all 44, and 14 were relevant.
+3. The pool was extended with dense_c150's top 5, on 2026-10-28, to judge the ablation to the same depth. Judged 40 documents, and 7 were relevant.
